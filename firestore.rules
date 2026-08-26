@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Inquiries / Tickets collection
+    match /inquiries/{ticketId} {
+      allow read, write: if true;
+      
+      // Subcollection for messages in the inquiry
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Default presets and configs
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

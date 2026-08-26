@@ -1,0 +1,6 @@
+{
+  "name": "실시간 응대 시스템",
+  "description": "고객을 위한 직관적인 1:1 실시간 상담 공간과 다수의 담당자가 실시간으로 민원을 확인하고 즉시 응대할 수 있는 모바일 최적화 상담 솔루션",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
