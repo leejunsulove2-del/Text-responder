@@ -25,7 +25,7 @@ import { InquiryTicket, InquiryStatus } from '../../types';
 import {
   subscribeToStaffTickets,
   updateTicketStatus,
-  seedSampleInquiries,
+  deleteSampleInquiries,
   runAutoRetentionCleanup,
   cleanupExpiredInquiries,
   deleteTicketWithAllMessages,
@@ -180,9 +180,18 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
   const countCompleted = tickets.filter((t) => t.status === 'completed').length;
   const countActive = tickets.filter((t) => t.status !== 'completed').length;
 
-  // Re-seed sample data if empty
-  const handleAddSample = async () => {
-    await seedSampleInquiries();
+  // Clean all virtual/demo inquiries
+  const handleDeleteSampleData = async () => {
+    setIsCleaning(true);
+    try {
+      const res = await deleteSampleInquiries();
+      setCleanupNotice(`가상/샘플 문의 ${res.deletedCount}건을 삭제 완료했습니다. (실제 고객 문의만 남았습니다)`);
+      setTimeout(() => setCleanupNotice(null), 5000);
+    } catch (e) {
+      setCleanupNotice('가상 데이터 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setIsCleaning(false);
+    }
   };
 
   // If a ticket is selected, switch to full-screen Staff Chat Consultation view
@@ -410,22 +419,26 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
             <div>
               <h3 className="font-bold text-sm text-slate-800">
                 {activeTab === 'recent_5min'
-                  ? '5분 이내의 신규 문의가 없습니다'
+                  ? '5분 이내의 신규 접수된 문의가 없습니다'
                   : activeTab === 'completed'
                   ? '응대 완료된 내역이 없습니다'
-                  : '문의 내역이 없습니다'}
+                  : '접수된 문의 내역이 없습니다'}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                고객 화면에서 새 메시지를 보내거나 아래 버튼으로 샘플 데이터를 추가할 수 있습니다.
+                실제 고객이 1:1 실시간 상담창에서 문의를 등록하면 즉시 여기에 실시간으로 표시됩니다.
               </p>
             </div>
-            <button
-              onClick={handleAddSample}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>테스트 샘플 문의 추가</span>
-            </button>
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleDeleteSampleData}
+                disabled={isCleaning}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-bold rounded-lg border border-slate-200 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>남아있는 가상/샘플 민원 정리</span>
+              </button>
+            </div>
           </div>
         ) : (
           filteredTickets.map((ticket) => {

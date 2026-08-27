@@ -5,7 +5,7 @@ import { KakaoChatView } from './components/customer/KakaoChatView';
 import { StaffConsole } from './components/staff/StaffConsole';
 import { InquiryTicket, InquiryMessage } from './types';
 import {
-  seedSampleInquiries,
+  deleteSampleInquiries,
   subscribeToStaffTickets,
   subscribeToTicketMessages,
   getLocalCustomerSessionTicketId,
@@ -53,18 +53,18 @@ export default function App() {
     handleViewChange('landing');
   };
 
-  // Initialize service worker and sample data
+  // Initialize service worker and cleanup any old virtual/demo inquiries
   useEffect(() => {
     registerServiceWorker();
 
-    const hasSeeded = sessionStorage.getItem('has_auto_seeded_kakao_v3');
-    if (!hasSeeded) {
-      seedSampleInquiries()
-        .then(() => {
-          sessionStorage.setItem('has_auto_seeded_kakao_v3', 'true');
-        })
-        .catch((e) => console.log('Auto seed info:', e));
-    }
+    // Automatically remove any mock/virtual demo data so only real human inquiries exist
+    deleteSampleInquiries()
+      .then((res) => {
+        if (res.deletedCount > 0) {
+          console.log(`Cleaned up ${res.deletedCount} virtual/demo inquiries.`);
+        }
+      })
+      .catch((e) => console.log('Sample cleanup info:', e));
   }, []);
 
   // Global ticket subscription for counts & Staff background notifications

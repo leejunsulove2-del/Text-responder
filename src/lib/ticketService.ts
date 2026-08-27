@@ -442,136 +442,49 @@ export async function markAsReadByStaff(ticketId: string): Promise<void> {
 }
 
 /**
- * Seed realistic initial demo data with Device Name + IP format and 5-min recent entries
+ * Permanently delete all virtual/demo sample inquiries from Firestore
+ */
+export async function deleteSampleInquiries(): Promise<{ deletedCount: number }> {
+  try {
+    const snap = await getDocs(collection(db, TICKETS_COL));
+    const sampleKeywords = [
+      'TALK-881',
+      'TALK-512',
+      'TALK-429',
+      '보도블록',
+      '자동차세',
+      '맞춤돌봄',
+      '175.223.88.19',
+      '211.195.42.12',
+      '121.160.84.19',
+    ];
+
+    let deletedCount = 0;
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data() as InquiryTicket;
+      const isSample =
+        sampleKeywords.some((kw) => data.ticketNo?.includes(kw)) ||
+        sampleKeywords.some((kw) => data.customerName?.includes(kw)) ||
+        sampleKeywords.some((kw) => data.lastMessage?.includes(kw));
+
+      if (isSample) {
+        await deleteTicketWithAllMessages(docSnap.id);
+        deletedCount++;
+      }
+    }
+    return { deletedCount };
+  } catch (err) {
+    console.error('deleteSampleInquiries error:', err);
+    return { deletedCount: 0 };
+  }
+}
+
+/**
+ * Seed realistic initial demo data (DISABLED: ONLY REAL INQUIRIES FROM USERS)
  */
 export async function seedSampleInquiries(): Promise<void> {
-  const now = Date.now();
-
-  const samples = [
-    {
-      customerName: 'iPhone 15 Pro (175.223.88.19)',
-      ticketNo: 'TALK-881',
-      status: 'unanswered' as InquiryStatus,
-      lastMessage: '상계동 4거리 보도블록 파손 사진 첨부하여 문의드립니다. 빠른 조치 부탁드립니다.',
-      lastMessageTime: now - 1000 * 60 * 2, // 2 mins ago (within 5 minutes!)
-      unreadStaffCount: 1,
-      assignedAgents: [],
-      messages: [
-        {
-          senderType: 'system' as const,
-          senderName: '실시간 상담톡 안내',
-          content: '반갑습니다 iPhone 15 Pro (175.223.88.19)! 실시간 상담 센터에 오신 것을 환영합니다.',
-          offset: -1000 * 60 * 3,
-        },
-        {
-          senderType: 'customer' as const,
-          senderName: 'iPhone 15 Pro (175.223.88.19)',
-          content: '상계동 4거리 버스정류장 앞 횡단보도 진입로 보도블록이 심하게 파손되어 보행자가 걸려 넘어질 뻔했습니다. 빠른 조치 부탁드립니다.',
-          offset: -1000 * 60 * 2,
-        },
-      ],
-    },
-    {
-      customerName: 'Galaxy S24 (211.195.42.12)',
-      ticketNo: 'TALK-512',
-      status: 'unanswered' as InquiryStatus,
-      lastMessage: '올해 자동차세 연납 할인 신청 기간과 납부 방법이 궁금합니다!',
-      lastMessageTime: now - 1000 * 60 * 4, // 4 mins ago (within 5 minutes!)
-      unreadStaffCount: 1,
-      assignedAgents: [],
-      messages: [
-        {
-          senderType: 'system' as const,
-          senderName: '실시간 상담톡 안내',
-          content: '반갑습니다 Galaxy S24 (211.195.42.12)! 실시간 상담 센터에 오신 것을 환영합니다.',
-          offset: -1000 * 60 * 5,
-        },
-        {
-          senderType: 'customer' as const,
-          senderName: 'Galaxy S24 (211.195.42.12)',
-          content: '올해 자동차세 연납 할인 신청 기간과 납부 방법이 궁금합니다!',
-          offset: -1000 * 60 * 4,
-        },
-      ],
-    },
-    {
-      customerName: 'Windows PC (121.160.84.19)',
-      ticketNo: 'TALK-429',
-      status: 'completed' as InquiryStatus,
-      lastMessage: '답변 감사드립니다. 서류 준비해서 온라인 접수하겠습니다!',
-      lastMessageTime: now - 1000 * 60 * 45,
-      unreadStaffCount: 0,
-      assignedAgents: [DEFAULT_AGENTS[0], DEFAULT_AGENTS[2]],
-      messages: [
-        {
-          senderType: 'system' as const,
-          senderName: '실시간 상담톡 안내',
-          content: '반갑습니다 Windows PC (121.160.84.19)! 실시간 상담 센터에 오신 것을 환영합니다.',
-          offset: -1000 * 60 * 60,
-        },
-        {
-          senderType: 'customer' as const,
-          senderName: 'Windows PC (121.160.84.19)',
-          content: '어르신 맞춤돌봄 서비스 신청 서류 목록이 어떻게 되나요?',
-          offset: -1000 * 60 * 55,
-        },
-        {
-          senderType: 'agent' as const,
-          senderName: '이서연 상담관',
-          senderRole: '취약계층·주거·생활복지',
-          senderDepartment: '복지지원과',
-          senderAvatarColor: '#7C3AED',
-          content: '신분증 사본과 주소지 확인 서류가 필요하며 복지로(bokjiro.go.kr)에서 온라인 신청 가능합니다.',
-          offset: -1000 * 60 * 50,
-        },
-        {
-          senderType: 'customer' as const,
-          senderName: 'Windows PC (121.160.84.19)',
-          content: '답변 감사드립니다. 서류 준비해서 온라인 접수하겠습니다!',
-          offset: -1000 * 60 * 45,
-        },
-      ],
-    },
-  ];
-
-  for (const sample of samples) {
-    const docRef = doc(collection(db, TICKETS_COL));
-    const ticketData: InquiryTicket = {
-      id: docRef.id,
-      ticketNo: sample.ticketNo,
-      customerName: sample.customerName,
-      customerToken: 'tok_' + Math.random().toString(36).substring(2, 10),
-      status: sample.status,
-      lastMessage: sample.lastMessage,
-      lastMessageType: 'text',
-      lastMessageTime: sample.lastMessageTime,
-      assignedAgents: sample.assignedAgents,
-      activeAgents: {},
-      unreadStaffCount: sample.unreadStaffCount,
-      unreadCustomerCount: 0,
-      createdAt: sample.lastMessageTime - 60000,
-      updatedAt: sample.lastMessageTime,
-    };
-
-    await setDoc(docRef, ticketData);
-
-    for (const msgItem of sample.messages) {
-      const msgDocRef = doc(collection(db, TICKETS_COL, docRef.id, 'messages'));
-      const msgData: InquiryMessage = {
-        id: msgDocRef.id,
-        ticketId: docRef.id,
-        senderType: msgItem.senderType,
-        senderName: msgItem.senderName,
-        senderRole: (msgItem as any).senderRole,
-        senderDepartment: (msgItem as any).senderDepartment,
-        senderAvatarColor: (msgItem as any).senderAvatarColor,
-        content: msgItem.content,
-        isInternalNote: false,
-        createdAt: now + msgItem.offset,
-      };
-      await setDoc(msgDocRef, cleanFirestoreData(msgData));
-    }
-  }
+  // Disabled permanently so only real human inquiries are preserved
+  return Promise.resolve();
 }
 
 /**
