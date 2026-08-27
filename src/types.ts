@@ -58,6 +58,7 @@ export interface InquiryTicket {
   // Unread count indicators
   unreadStaffCount: number; // Unanswered / new message count for staff
   unreadCustomerCount: number; // Unread messages for customer
+  hasCustomerMessage?: boolean; // True only when customer actually typed/sent a message
   
   // Internal staff summary / note
   internalSummary?: string;

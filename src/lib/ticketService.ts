@@ -110,6 +110,20 @@ export async function getOrCreateCustomerSessionTicket(customName?: string): Pro
 }
 
 /**
+ * Helper to determine if a ticket has an actual user-sent customer inquiry message
+ */
+export function isRealCustomerInquiry(ticket: InquiryTicket): boolean {
+  if (ticket.hasCustomerMessage === true) return true;
+  if (ticket.hasCustomerMessage === false) return false;
+  // Fallback for legacy tickets
+  const isDefaultGreeting =
+    !ticket.lastMessage ||
+    ticket.lastMessage === '상담이 시작되었습니다. 무엇이든 편하게 남겨주세요.' ||
+    ticket.lastMessage === '[대화 대기중]';
+  return !isDefaultGreeting;
+}
+
+/**
  * Create a fresh new inquiry chat session for the customer
  */
 export async function createNewCustomerTicket(customName?: string): Promise<InquiryTicket> {
@@ -130,8 +144,9 @@ export async function createNewCustomerTicket(customName?: string): Promise<Inqu
     lastMessageTime: now,
     assignedAgents: [],
     activeAgents: {},
-    unreadStaffCount: 1,
+    unreadStaffCount: 0, // Customer has not typed any message yet - do NOT alert staff
     unreadCustomerCount: 0,
+    hasCustomerMessage: false, // Flag indicating real customer interaction
     createdAt: now,
     updatedAt: now,
   };
@@ -146,8 +161,8 @@ export async function createNewCustomerTicket(customName?: string): Promise<Inqu
     id: msgDocRef.id,
     ticketId: docRef.id,
     senderType: 'system',
-    senderName: '실시간 상담 안내',
-    content: `반갑습니다 ${authorName}! 한국전력 실시간 상담 센터에 오신 것을 환영합니다.\n\n궁금하신 내용이나 현장 사진을 보내주시면, 담당자가 실시간으로 확인하여 즉시 답변해 드립니다.`,
+    senderName: '실시간 응대 시스템 안내',
+    content: `반갑습니다 ${authorName}! 실시간 응대 시스템에 오신 것을 환영합니다.\n\n궁금하신 내용이나 현장 사진을 입력해 주시면, 담당자가 실시간으로 확인하여 즉시 응대해 드립니다.`,
     isInternalNote: false,
     createdAt: now,
   };
@@ -187,16 +202,17 @@ export async function sendCustomerMessage(params: {
 
   await setDoc(msgDocRef, cleanFirestoreData(msgData));
 
-  // Update ticket overview
+  // Update ticket overview - Now it is a real active inquiry for staff to attend!
   const ticketRef = doc(db, TICKETS_COL, params.ticketId);
-  const previewText = params.content.trim() || (params.imageUrl ? '📷 [사진 첨부]' : '새 메시지');
+  const previewText = params.content.trim() || (params.imageUrl ? '📷 [사진 첨부]' : '새 문의 메시지');
 
   await updateDoc(ticketRef, {
     lastMessage: previewText,
     lastMessageType: params.imageUrl ? 'image' : 'text',
     lastMessageTime: now,
-    status: 'unanswered', // Always highlight as unanswered when customer speaks
+    status: 'unanswered', // Highlight as unanswered when customer speaks
     unreadStaffCount: 1,
+    hasCustomerMessage: true, // Mark that customer has actually asked something!
     updatedAt: now,
   }).catch((err) => console.warn('Ticket update error:', err));
 }
@@ -442,7 +458,7 @@ export async function markAsReadByStaff(ticketId: string): Promise<void> {
 }
 
 /**
- * Permanently delete all virtual/demo sample inquiries from Firestore
+ * Permanently delete all virtual/demo sample inquiries and un-sent empty greeting tickets from Firestore
  */
 export async function deleteSampleInquiries(): Promise<{ deletedCount: number }> {
   try {
@@ -467,7 +483,13 @@ export async function deleteSampleInquiries(): Promise<{ deletedCount: number }>
         sampleKeywords.some((kw) => data.customerName?.includes(kw)) ||
         sampleKeywords.some((kw) => data.lastMessage?.includes(kw));
 
-      if (isSample) {
+      const isUnsentGhost =
+        data.hasCustomerMessage === false ||
+        (data.lastMessage === '상담이 시작되었습니다. 무엇이든 편하게 남겨주세요.' &&
+          !data.hasCustomerMessage &&
+          data.status !== 'completed');
+
+      if (isSample || isUnsentGhost) {
         await deleteTicketWithAllMessages(docSnap.id);
         deletedCount++;
       }

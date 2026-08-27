@@ -30,6 +30,7 @@ import {
   cleanupExpiredInquiries,
   deleteTicketWithAllMessages,
   RETENTION_PERIOD_DAYS,
+  isRealCustomerInquiry,
 } from '../../lib/ticketService';
 import { StaffChatDetailView } from './StaffChatDetailView';
 
@@ -148,8 +149,10 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
     });
   };
 
-  // Filtered tickets based on active tab and search
-  const filteredTickets = tickets.filter((t) => {
+  // Filtered tickets based on active tab and search (Only show real customer inquiries or completed tickets)
+  const realInquiries = tickets.filter((t) => isRealCustomerInquiry(t) || t.status === 'completed');
+
+  const filteredTickets = realInquiries.filter((t) => {
     // Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -173,12 +176,12 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
     return t.status !== 'completed';
   });
 
-  const count5Min = tickets.filter(
+  const count5Min = realInquiries.filter(
     (t) => t.status !== 'completed' && (isWithin5Min(t.createdAt) || isWithin5Min(t.lastMessageTime) || t.status === 'unanswered')
   ).length;
 
-  const countCompleted = tickets.filter((t) => t.status === 'completed').length;
-  const countActive = tickets.filter((t) => t.status !== 'completed').length;
+  const countCompleted = realInquiries.filter((t) => t.status === 'completed').length;
+  const countActive = realInquiries.filter((t) => t.status !== 'completed').length;
 
   // Clean all virtual/demo inquiries
   const handleDeleteSampleData = async () => {

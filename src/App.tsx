@@ -9,6 +9,7 @@ import {
   subscribeToStaffTickets,
   subscribeToTicketMessages,
   getLocalCustomerSessionTicketId,
+  isRealCustomerInquiry,
 } from './lib/ticketService';
 import {
   registerServiceWorker,
@@ -73,14 +74,17 @@ export default function App() {
       const isWithin5Min = (t: InquiryTicket) =>
         Date.now() - (t.lastMessageTime || t.createdAt) <= 5 * 60 * 1000;
 
-      const unreplied = tickets.filter(
+      // Only consider tickets where customer actually asked a question or completed
+      const realInquiries = tickets.filter(isRealCustomerInquiry);
+
+      const unreplied = realInquiries.filter(
         (t) => t.status === 'unanswered' || (t.status !== 'completed' && isWithin5Min(t))
       );
       setUnansweredCount(unreplied.length);
 
       // If user is currently in Staff view, trigger notification on new customer message
       if (currentView === 'staff' || currentView === 'split') {
-        const latestMsgTicket = tickets
+        const latestMsgTicket = realInquiries
           .filter((t) => t.lastMessageTime && t.lastMessageTime > lastStaffNotifiedMsgTime.current)
           .sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0))[0];
 
