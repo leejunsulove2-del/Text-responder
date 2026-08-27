@@ -159,24 +159,23 @@ export const HomePortalView: React.FC<HomePortalViewProps> = ({
           </button>
         </div>
 
-        {/* Features Checklist */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-md w-full mt-6 px-2 text-slate-300 text-xs">
-          <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3 flex flex-col items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span className="font-semibold text-white">현장 사진 접수</span>
-            <span className="text-[10px] text-slate-400">계량기 직접 첨부</span>
-          </div>
-
-          <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3 flex flex-col items-center gap-1.5">
-            <Clock className="w-4 h-4 text-amber-400" />
-            <span className="font-semibold text-white">실시간 답변</span>
-            <span className="text-[10px] text-slate-400">도착 시 푸시 알림</span>
-          </div>
-
-          <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-3 flex flex-col items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-blue-400" />
-            <span className="font-semibold text-white">3일 자동 파기</span>
-            <span className="text-[10px] text-slate-400">개인정보 보호</span>
+        {/* Features Info Bar (Informative styling, not buttons) */}
+        <div className="w-full max-w-md mt-6 px-3 py-3 rounded-2xl bg-slate-800/40 border border-slate-800 text-slate-300 text-xs">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
+            <div className="flex items-center gap-1.5 flex-1 justify-center">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <span className="font-medium text-slate-200 text-[11px] sm:text-xs">현장 사진 접수</span>
+            </div>
+            <div className="w-[1px] h-3 bg-slate-700" />
+            <div className="flex items-center gap-1.5 flex-1 justify-center">
+              <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <span className="font-medium text-slate-200 text-[11px] sm:text-xs">실시간 답변</span>
+            </div>
+            <div className="w-[1px] h-3 bg-slate-700" />
+            <div className="flex items-center gap-1.5 flex-1 justify-center">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+              <span className="font-medium text-slate-200 text-[11px] sm:text-xs">3일 자동 파기</span>
+            </div>
           </div>
         </div>
 

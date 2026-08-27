@@ -162,7 +162,7 @@ export async function createNewCustomerTicket(customName?: string): Promise<Inqu
     ticketId: docRef.id,
     senderType: 'system',
     senderName: '실시간 응대 시스템 안내',
-    content: `반갑습니다 ${authorName}! 실시간 응대 시스템에 오신 것을 환영합니다.\n\n궁금하신 내용이나 현장 사진을 입력해 주시면, 담당자가 실시간으로 확인하여 즉시 응대해 드립니다.`,
+    content: `반갑습니다 ${authorName}! 실시간 응대 시스템에 오신 것을 환영합니다.\n\n궁금하신 내용이나 현장 사진을 입력해 주시면, 담당자가 실시간으로 확인하여 즉시 응대해 드립니다.\n\n⚠️ 주민등록번호, 계좌번호, 비밀번호 등 민감한 개인정보는 전송하지 마세요.`,
     isInternalNote: false,
     createdAt: now,
   };

@@ -221,6 +221,12 @@ export function KakaoChatView({ onSwitchToStaff, onBackToHome }: KakaoChatViewPr
           </div>
         </div>
 
+        {/* Sensitive Information Disclaimer Strip */}
+        <div className="bg-amber-100/90 border-b border-amber-300/40 px-3 py-1 text-[11px] text-amber-900 font-medium flex items-center gap-1.5 shadow-2xs">
+          <span className="text-[11px]">⚠️</span>
+          <span className="truncate">주민등록번호, 계좌번호 등 민감한 개인정보는 전송하지 마세요.</span>
+        </div>
+
         {/* Chat Messages Scrollable Area */}
         <div
           id="kakao-chat-messages-container"

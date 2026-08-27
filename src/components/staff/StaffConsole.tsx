@@ -50,6 +50,7 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
   // Retention cleanup status states
   const [isCleaning, setIsCleaning] = useState(false);
   const [cleanupNotice, setCleanupNotice] = useState<string | null>(null);
+  const [ticketToComplete, setTicketToComplete] = useState<{ id: string; ticketNo: string; name: string } | null>(null);
 
   // Save nickname preference
   const handleNicknameChange = (name: string) => {
@@ -545,8 +546,14 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
                   {!isCompleted ? (
                     <button
                       type="button"
-                      onClick={() => updateTicketStatus(ticket.id, 'completed')}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 border border-slate-200 transition-colors flex items-center gap-1"
+                      onClick={() =>
+                        setTicketToComplete({
+                          id: ticket.id,
+                          ticketNo: ticket.ticketNo,
+                          name: ticket.customerName || '고객',
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 border border-slate-200 transition-colors flex items-center gap-1 cursor-pointer"
                       title="응대완료로 변경"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
@@ -556,7 +563,7 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
                     <button
                       type="button"
                       onClick={() => updateTicketStatus(ticket.id, 'in_progress')}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 border border-slate-200 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 border border-slate-200 transition-colors flex items-center gap-1 cursor-pointer"
                       title="응대중으로 복원"
                     >
                       <span>재응대</span>
@@ -567,7 +574,7 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
                   <button
                     type="button"
                     onClick={(e) => handleDeleteTicket(e, ticket.id, ticket.ticketNo)}
-                    className="p-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 transition-colors"
+                    className="p-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 transition-colors cursor-pointer"
                     title="상담 내역 및 메시지 영구 삭제"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -589,6 +596,62 @@ export const StaffConsole: React.FC<StaffConsoleProps> = ({ onLogout }) => {
           })
         )}
       </div>
+
+      {/* Confirmation Modal for Complete */}
+      {ticketToComplete && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setTicketToComplete(null)}
+        >
+          <div
+            className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-slate-800 space-y-4 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold flex-shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900">상담 완료 확인</h3>
+                <p className="text-xs text-slate-500">
+                  {ticketToComplete.name} ({ticketToComplete.ticketNo})
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 text-xs text-slate-600 leading-relaxed">
+              <p className="font-bold text-slate-800 text-sm mb-1">
+                상담을 완료하시겠습니까?
+              </p>
+              <p className="text-slate-500">
+                완료된 상담은 <strong>[응대 완료]</strong> 탭으로 이동되며, 필요 시 언제든 <strong>[재응대]</strong>로 다시 복원하실 수 있습니다.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setTicketToComplete(null)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-ticket-complete"
+                onClick={async () => {
+                  await updateTicketStatus(ticketToComplete.id, 'completed');
+                  setTicketToComplete(null);
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>완료하기</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

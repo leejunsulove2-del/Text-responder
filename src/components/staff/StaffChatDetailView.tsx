@@ -58,6 +58,7 @@ export const StaffChatDetailView: React.FC<StaffChatDetailViewProps> = ({
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -249,7 +250,7 @@ export const StaffChatDetailView: React.FC<StaffChatDetailViewProps> = ({
             <button
               type="button"
               id="btn-detail-complete"
-              onClick={() => handleToggleStatus('completed')}
+              onClick={() => setShowCompleteConfirm(true)}
               className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer active:scale-95"
               title="상담 완료 처리"
             >
@@ -608,6 +609,62 @@ export const StaffChatDetailView: React.FC<StaffChatDetailViewProps> = ({
             alt="확대 사진"
             className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
           />
+        </div>
+      )}
+
+      {/* Confirmation Modal for Complete */}
+      {showCompleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setShowCompleteConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-slate-800 space-y-4 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold flex-shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900">상담 완료 확인</h3>
+                <p className="text-xs text-slate-500">
+                  {ticket?.customerName} ({ticket?.ticketNo})
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 text-xs text-slate-600 leading-relaxed">
+              <p className="font-bold text-slate-800 text-sm mb-1">
+                상담을 완료하시겠습니까?
+              </p>
+              <p className="text-slate-500">
+                완료 후에도 대화 내역은 보관되며, 필요 시 언제든 <strong>[재응대]</strong>로 다시 전환하실 수 있습니다.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowCompleteConfirm(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-complete"
+                onClick={async () => {
+                  await handleToggleStatus('completed');
+                  setShowCompleteConfirm(false);
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>완료하기</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
